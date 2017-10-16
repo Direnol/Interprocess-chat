@@ -9,28 +9,29 @@
 #include <memory.h>
 
 typedef struct {
-    int idTo;
-    int idFrom;
-    int length;
+    char idTo;
+    char idFrom;
+    char length;
     char message[0];
 } record;
 
 #define PROJ_ID 1997
 #define PATH_KEY "/"
-#define SHARED_MEMORY_SIZE (8 + 4096)
+#define SHARED_MEMORY_SIZE (4096)
 #define SIZE_ONE 128
 #define ENABLE_MEMORY (SIZE_ONE - 4 / 2)
 #define PART_FIRST 4
 #define PART_SECOND ((SIZE_ONE + 4) / 2)
-#define MAX_CLIENTS ((SHARED_MEMORY_SIZE - 8) / SIZE_ONE)
+#define MAX_CLIENTS ((SHARED_MEMORY_SIZE) / SIZE_ONE)
 #define MSG_SIZE sizeof(record)
-#define AT(ptr, offset) ((char *) (ptr) + (offset))
 #define READY 1
 #define UNREADY 0
+
 #define USED_ID 0
 #define ID 1
 #define MSG_READY_PUT 2
 #define MSG_READY_GET 3
+
 #define UNUSED 0
 #define USED 1
 
@@ -42,11 +43,11 @@ void *getMemory(key_t key);
 
 int cwriteTo(record Record, char *message, void *segment, int myid);
 
-int cread(record *Record, int myid, void *segment);
+int cread(record *Record, int myid, void *segment, char *getmsg);
 
-int swriteTo(record Record, int id, void *segment);
+int swriteTo(record Record, int id, void *segment, char *msg);
 
-int sread(record *Record, int id, void *segment);
+int sread(record *Record, int id, void *segment, char *getmsg);
 
 void deleteMemory(void *segment, int shmid);
 

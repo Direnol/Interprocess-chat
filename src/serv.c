@@ -4,8 +4,7 @@ void ServInit(void **seg, int *shmid)
 {
     key_t key = getKey();
     *seg = createMemory(key, shmid);
-    char *tmp = *seg;
-    for (int i = 0; i < SHARED_MEMORY_SIZE; ++i) tmp[i] = 0;
+    memset(*seg, 0, SHARED_MEMORY_SIZE);
 }
 
 int ServSend(record Rec, char *msg, void *seg)
@@ -14,15 +13,16 @@ int ServSend(record Rec, char *msg, void *seg)
     char *client = (char *) (seg) + (id * SIZE_ONE);
 
     if (client[USED_ID] == UNUSED) return -1;
-    if (swriteTo(Rec, id, seg) == UNREADY) return EXIT_FAILURE;
+    if (swriteTo(Rec, id, seg, msg) == UNREADY) return EXIT_FAILURE;
     return EXIT_SUCCESS;
 }
 
-int ServRecv(record *Rec, int id, void *seg)
+int ServRecv(record *Rec, int id, void *seg, char *msg)
 {
     char *client = (char *) (seg) + (id * SIZE_ONE);
     if (client[USED_ID] == UNUSED) return -1;
-    if (sread(Rec, id, seg) == UNREADY) return EXIT_FAILURE;
+    if (sread(Rec, id, seg, msg) == UNREADY) return -1;//EXIT_FAILURE;
+//    printf("%d %d", Rec->idFrom, Rec->idTo);
     return EXIT_SUCCESS;
 }
 
