@@ -1,10 +1,13 @@
 #include "../headers/serv.h"
 
-void ServInit(void **seg, int *shmid)
+void ServInit(void **seg, int *shmid, int *semid)
 {
     key_t key = getKey();
+    semInit(semid);
     *seg = createMemory(key, shmid);
+    lock(*semid, LOCK_MEMORY);
     memset(*seg, 0, SHARED_MEMORY_SIZE);
+    unlock(*semid, LOCK_MEMORY);
 }
 
 int ServSend(record Rec, char *msg, void *seg)
@@ -26,7 +29,8 @@ int ServRecv(record *Rec, int id, void *seg, char *msg)
     return EXIT_SUCCESS;
 }
 
-void deleteServ(void *seg, int shmid)
+void deleteServ(void *seg, int shmid, int semid)
 {
     deleteMemory(seg, shmid);
+    semDel(semid);
 }

@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include "../headers/client.h"
 
-int init(void **seg, int *id)
+int init(void **seg, int *id, int *semid)
 {
+
     //lock
     key_t key = getKey();
     char *ptr = getMemory(key);
+    semGet(semid);
     *id = -1;
+    lock(*semid, LOCK_MEMORY);
     for (int i = 0; i < MAX_CLIENTS; ++i) {
         if (ptr[i * SIZE_ONE + USED_ID] == UNUSED) {
             memset(ptr + i * SIZE_ONE, 0, SIZE_ONE);
@@ -16,7 +19,7 @@ int init(void **seg, int *id)
             break;
         }
     }
-    //unlock
+    unlock(*semid, LOCK_MEMORY);
     pthread_mutex_init(&mutex, NULL);
     if (*id < 0) return EXIT_FAILURE;
     *seg = ptr;
@@ -41,14 +44,16 @@ int recv(record *Rec, int id, void *seg, char *getmsg)
     return EXIT_SUCCESS;
 }
 
-void disconnect(void *seg, int id)
+void disconnect(void *seg, int id, int semid)
 {
     char *cur = seg;
     cur = cur + id * SIZE_ONE;
-    if (id >= 0)
+    if (id >= 0) {
+        lock(semid, id);
         cur[USED_ID] = 0;
-
-    memset(cur, 0, SIZE_ONE);
+        memset(cur, 0, SIZE_ONE);
+        unlock(semid, id);
+    }
 
     if (shmdt(seg) == -1) {
         perror("shmdt:");
@@ -63,18 +68,19 @@ void *read_msg(void *arg)
     data *p = arg;
     char *seg = p->seg;
     int myid = p->myid;
+    int semid = p->semid;
     char msg[64];
     int res;
     while (1) {
-        // lock
+        lock(semid, p->myid);
         res = recv(&Record, myid, seg, msg);
         if (res == EXIT_SUCCESS) {
             pthread_mutex_lock(&mutex);
             printf("From[%d] : %s\n", Record.idFrom, msg);
             pthread_mutex_unlock(&mutex);
         }
-        //unlock
-        sleep(1);
+        unlock(semid, p->myid);
+        usleep(50000);
     }
 }
 
@@ -83,6 +89,7 @@ void *write_msg(void *arg)
     record Record;
     data *passport = arg;
     Record.idFrom = passport->myid;
+    int semid = passport->semid;
     char message[ENABLE_MEMORY];
     char *seg = passport->seg;
     int res;
@@ -110,14 +117,14 @@ void *write_msg(void *arg)
         }
         message[i] = '\0';
         Record.length = (char) (strlen(message) + 1);
-        //lock
-        //printf("F%d To%d\n", Record.idFrom, Record.idTo);
+        lock(semid, passport->myid);
         res = send(Record, Record.idFrom, message, seg);
-        //unlock
+        unlock(semid, passport->myid);
         while (res == EXIT_FAILURE) {
-            //lock
+            lock(semid, passport->myid);
             res = send(Record, Record.idTo, message, seg);
-            //unlock
+            unlock(semid, passport->myid);
+            usleep(50000);
         }
     }
 }

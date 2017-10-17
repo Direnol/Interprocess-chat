@@ -1,14 +1,14 @@
 #ifndef INTERPROCESS_CHAT_SERV_H
 #define INTERPROCESS_CHAT_SERV_H
 
-#include "sharedMemory.h"
+#include "lock.h"
 
-void ServInit(void **seg, int *shmid);
+void ServInit(void **seg, int *shmid, int *semid);
 
 int ServSend(record Rec, char *msg, void *seg);
 
 int ServRecv(record *Rec, int id, void *seg, char *msg);
 
-void deleteServ(void *seg, int shmid);
+void deleteServ(void *seg, int shmid, int semid);
 
 #endif //INTERPROCESS_CHAT_SERV_H
