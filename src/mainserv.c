@@ -1,7 +1,6 @@
 #include <signal.h>
 #include <zconf.h>
 #include "../headers/serv.h"
-#include "../headers/sharedMemory.h"
 
 void sig(int num);
 
@@ -21,6 +20,7 @@ int main()
             do {
                 lock(semid, i);
                 res = ServRecv(&Rec, i, seg, msg);
+                unlock(semid, i);
                 if (res == EXIT_SUCCESS) {
                     printf("From[%d] : To[%d] = [%s]\n", Rec.idFrom, Rec.idTo, msg);
                     do {
@@ -32,10 +32,10 @@ int main()
                             Rec.idTo = Rec.idFrom;
                             Rec.length = (char) (strlen(msg) + 1);
                         }
-                        usleep(50000);
+                        sleep(1);
                     } while (res == EXIT_FAILURE);
                 }
-                unlock(semid, i);
+
             } while (res == EXIT_FAILURE);
         }
     }

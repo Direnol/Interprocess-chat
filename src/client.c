@@ -74,13 +74,13 @@ void *read_msg(void *arg)
     while (1) {
         lock(semid, p->myid);
         res = recv(&Record, myid, seg, msg);
+        unlock(semid, p->myid);
         if (res == EXIT_SUCCESS) {
             pthread_mutex_lock(&mutex);
             printf("From[%d] : %s\n", Record.idFrom, msg);
             pthread_mutex_unlock(&mutex);
         }
-        unlock(semid, p->myid);
-        usleep(50000);
+        sleep(1);
     }
 }
 
@@ -124,7 +124,7 @@ void *write_msg(void *arg)
             lock(semid, passport->myid);
             res = send(Record, Record.idTo, message, seg);
             unlock(semid, passport->myid);
-            usleep(50000);
+            sleep(1);
         }
     }
 }

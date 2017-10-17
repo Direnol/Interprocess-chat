@@ -4,8 +4,9 @@
 
 #include "../headers/lock.h"
 
-struct sembuf _lock = {0, -1, IPC_NOWAIT};
-struct sembuf _unlock = {0, 1, IPC_NOWAIT};
+struct sembuf _lock = {0, -1, 0};
+struct sembuf _unlock = {0, 1, 0};
+semun arg;
 
 void semInit(int *semid)
 {
@@ -14,10 +15,10 @@ void semInit(int *semid)
         perror("Sem init");
         exit(1);
     }
-    semun arg;
+
     arg.val = 1;
     for (int i = 0; i <= MAX_CLIENTS; ++i) {
-        semctl(*semid, i, SETVAL, arg);
+        semctl(*semid, i, SETVAL, arg.val);
     }
 }
 
@@ -32,17 +33,19 @@ void semGet(int *semid)
 
 int lock(int semid, int id)
 {
+    _lock.sem_num = (unsigned short) id;
     semop(semid, &_lock, 1);
 }
 
 int unlock(int semid, int id)
 {
+    _unlock.sem_num = (unsigned short) id;
     semop(semid, &_unlock, 1);
 }
 
 void semDel(int semid)
 {
-    semctl(semid, 0, IPC_RMID);
+    for (int i = 0; i <= MAX_CLIENTS; ++i) semctl(semid, i, IPC_RMID);
 }
 
 

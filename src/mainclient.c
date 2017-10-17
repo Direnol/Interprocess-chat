@@ -33,7 +33,6 @@ void sig(int num)
     pthread_join(writer, NULL);
     pthread_join(reader, NULL);
 
-
     disconnect(seg, myid, semid);
     exit(0);
 }
