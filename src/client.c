@@ -107,7 +107,7 @@ void *write_msg(void *arg)
             continue;
         }
         Record.idTo = (char) res;
-        getchar();
+        while (getchar() != '\n') {}
         pthread_mutex_lock(&mutex);
         printf("\nWhat do you want to send?\n");
         pthread_mutex_unlock(&mutex);
@@ -116,6 +116,7 @@ void *write_msg(void *arg)
                 pthread_mutex_lock(&mutex);
                 printf("\nYour message is too long. We send current message without the last symbol\n");
                 pthread_mutex_unlock(&mutex);
+                while (getchar() != '\n') {}
                 break;
             }
             message[i++] = c;

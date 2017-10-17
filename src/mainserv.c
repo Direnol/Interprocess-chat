@@ -14,6 +14,7 @@ int main()
     ServInit(&seg, &shmid, &semid);
     int res;
     record *Rec = NULL;
+    printf("Server is started\n");
     while (1) {
         for (int i = 0; i < MAX_CLIENTS; ++i) {
             do {
