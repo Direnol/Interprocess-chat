@@ -1,5 +1,5 @@
 #include <signal.h>
-#include <zconf.h>
+#include <unistd.h>
 #include "../headers/serv.h"
 
 void sig(int num);
@@ -13,29 +13,31 @@ int main()
     signal(SIGINT, sig);
     ServInit(&seg, &shmid, &semid);
     int res;
-    record Rec;
-    char msg[64];
+    record *Rec = NULL;
     while (1) {
         for (int i = 0; i < MAX_CLIENTS; ++i) {
             do {
                 lock(semid, i);
-                res = ServRecv(&Rec, i, seg, msg);
-                unlock(semid, i);
+                res = ServRecv(&Rec, i, seg);
                 if (res == EXIT_SUCCESS) {
-                    printf("From[%d] : To[%d] = [%s]\n", Rec.idFrom, Rec.idTo, msg);
+                    printf("From[%d] : To[%d] = [%s]\n", Rec->idFrom, Rec->idTo, Rec->message);
                     do {
-                        lock(semid, Rec.idTo);
-                        res = ServSend(Rec, msg, seg);
-                        unlock(semid, Rec.idTo);
+                        if (i != Rec->idTo)
+                            lock(semid, Rec->idTo);
+                        res = ServSend(Rec, seg);
+                        if (i != Rec->idTo)
+                            unlock(semid, Rec->idTo);
                         if (res < 0) {
-                            sprintf(msg, "This client is not found[%d]", Rec.idTo);
-                            Rec.idTo = Rec.idFrom;
-                            Rec.length = (char) (strlen(msg) + 1);
+                            sprintf(Rec->message, "This client is not found[%d]", Rec->idTo);
+                            printf("id[%d] send to incorrect id[%d] : [%s]", i, Rec->idTo, Rec->message);
+                            Rec->idTo = Rec->idFrom;
+                            Rec->length = (char) (strlen(Rec->message) + 1);
+                            res = EXIT_FAILURE;
                         }
                         sleep(1);
                     } while (res == EXIT_FAILURE);
                 }
-
+                unlock(semid, i);
             } while (res == EXIT_FAILURE);
         }
     }

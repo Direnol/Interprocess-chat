@@ -36,9 +36,9 @@ int send(record Rec, int id, char *msg, void *seg)
     return EXIT_SUCCESS;
 }
 
-int recv(record *Rec, int id, void *seg, char *getmsg)
+int recv(record **Rec, int id, void *seg)
 {
-    int res = cread(Rec, id, seg, getmsg);
+    int res = cread(Rec, id, seg);
     if (res == UNREADY) return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
@@ -64,20 +64,19 @@ void disconnect(void *seg, int id, int semid)
 
 void *read_msg(void *arg)
 {
-    record Record;
+    record *Record = NULL;
     data *p = arg;
     char *seg = p->seg;
     int myid = p->myid;
     int semid = p->semid;
-    char msg[64];
     int res;
     while (1) {
         lock(semid, p->myid);
-        res = recv(&Record, myid, seg, msg);
+        res = recv(&Record, myid, seg);
         unlock(semid, p->myid);
         if (res == EXIT_SUCCESS) {
             pthread_mutex_lock(&mutex);
-            printf("From[%d] : %s\n", Record.idFrom, msg);
+            printf("From[%d] : [%s]\n", Record->idFrom, Record->message);
             pthread_mutex_unlock(&mutex);
         }
         sleep(1);
@@ -101,6 +100,12 @@ void *write_msg(void *arg)
         printf("\nWhom do you want to write?\n");
         pthread_mutex_unlock(&mutex);
         scanf("%d", &res);
+        if (res == passport->myid) {
+            pthread_mutex_lock(&mutex);
+            printf("Error id! You cann't send messange yourself\n");
+            pthread_mutex_unlock(&mutex);
+            continue;
+        }
         Record.idTo = (char) res;
         getchar();
         pthread_mutex_lock(&mutex);

@@ -5,9 +5,9 @@
 
 void ServInit(void **seg, int *shmid, int *semid);
 
-int ServSend(record Rec, char *msg, void *seg);
+int ServSend(record *Rec, void *seg);
 
-int ServRecv(record *Rec, int id, void *seg, char *msg);
+int ServRecv(record **Rec, int id, void *seg);
 
 void deleteServ(void *seg, int shmid, int semid);
 

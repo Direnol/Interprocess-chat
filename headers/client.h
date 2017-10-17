@@ -16,7 +16,7 @@ int init(void **seg, int *id, int *semid);
 
 int send(record Rec, int id, char *msg, void *seg);
 
-int recv(record *Rec, int id, void *seg, char *getmsg);
+int recv(record **Rec, int id, void *seg);
 
 void disconnect(void *seg, int id, int semid);
 

@@ -43,11 +43,11 @@ void *getMemory(key_t key);
 
 int cwriteTo(record Record, char *message, void *segment, int myid);
 
-int cread(record *Record, int myid, void *segment, char *getmsg);
+int cread(record **Record, int myid, void *segment);
 
-int swriteTo(record Record, int id, void *segment, char *msg);
+int swriteTo(record *Record, int id, void *segment);
 
-int sread(record *Record, int id, void *segment, char *getmsg);
+int sread(record **Record, int id, void *segment);
 
 void deleteMemory(void *segment, int shmid);
 
